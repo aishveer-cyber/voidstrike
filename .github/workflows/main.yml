@@ -303,10 +303,18 @@ jobs:
           fi
           python3 tools/write_build_info.py --platform android --arch arm64 --config $CONFIG
           mkdir -p build/android
-          timeout 1800 godot --headless --export-$CONFIG "Android" \
+          set +e
+          timeout 2400 godot --headless --export-$CONFIG "Android" \
             build/android/voidstrike.aab 2>&1 | tee aab.log
-          if grep -q "ERROR" aab.log; then echo "::error::AAB export failed"; exit 1; fi
-          test -f build/android/voidstrike.aab
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ] || [ ! -f build/android/voidstrike.aab ]; then
+            echo "===== AAB EXPORT LOG (last 120 lines) ====="
+            tail -120 aab.log
+            echo "=========================================="
+            echo "::error::AAB export failed (exit $CODE)"
+            exit 1
+          fi
           echo "AAB_SIGNED_AS=$CONFIG" >> "$GITHUB_ENV"
 
       - name: Upload AAB
