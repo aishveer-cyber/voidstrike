@@ -1,0 +1,28 @@
+# Godot
+.godot/
+/android/
+*.translation
+
+# Build outputs
+/build/
+/export/
+
+# Secrets: never commit signing material or credentials
+*.keystore
+*.jks
+export_credentials.cfg
+eos_credentials.cfg
+.env
+
+# Generated at export time
+/build_info.json
+
+# Python
+__pycache__/
+meshy_output/
+
+# Native extension (native/build.sh)
+/native/godot-cpp
+/native/bin/
+/native/src/*.os
+/native/.sconsign.dblite

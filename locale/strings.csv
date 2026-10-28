@@ -1,0 +1,367 @@
+keys,en
+MENU_TITLE,VOIDSTRIKE
+MENU_PLAY,Play
+MENU_HOST,Host Game
+MENU_JOIN,Join Game
+MENU_SETTINGS,Settings
+MENU_QUIT,Quit
+QUIT_CONFIRM,Quit VOIDSTRIKE?
+MENU_COMING_SOON,Coming in a later milestone
+MENU_PROFILE_NOT_SAVED,Your profile won't be saved on this device
+HUD_SCORE,Score %d
+HUD_RESPAWN_IN,Respawning in %d
+HUD_RELOADING,Reloading
+HUD_SPAWN_PROTECTED,Spawn protection
+PAUSE_TITLE,Paused
+PAUSE_RESUME,Resume
+PAUSE_LEAVE,Leave match
+PAUSE_CONTROLS_HINT,"WASD move · Shift sprint · Ctrl/C crouch, slide · Space jump, double jump, hold to mantle · R reload · Q / 1 / 2 switch · G grenade · V / F melee · E pick up · F3 diagnostics"
+TOUCH_FIRE,Fire
+TOUCH_JUMP,Jump
+TOUCH_CROUCH,Crouch
+TOUCH_RELOAD,Reload
+TOUCH_SWAP,Swap
+TOUCH_SCOPE,Scope
+MENU_NAME_PLACEHOLDER,Your name
+MENU_ADDRESS_PLACEHOLDER,IP address or invite code
+MENU_ADDRESS_PLACEHOLDER_LAN,Host IP address
+MENU_CONNECT,Connect
+MENU_BAD_ADDRESS,Enter the host's IP address or a 6-letter invite code
+PHASE_WAITING,Waiting for players
+PHASE_COUNTDOWN,Match starts in %d
+PHASE_PLAYING,
+PHASE_POST_MATCH,Match over
+NET_CONNECTING,Connecting to %s…
+NET_HOSTING,"Hosting on %s, port %d"
+NET_DISCONNECTED,Disconnected from the host
+NET_CONNECT_ERROR,Could not connect (%s)
+NET_HOST_ERROR,"Could not host on port %d (%s)"
+MENU_BACK,Back
+NET_RECONNECTING,Connection lost: reconnecting (%d s)
+NET_RECONNECT_FAILED,Couldn't reconnect to the match
+NET_HOST_PAUSED,The host paused the game
+NET_HOST_NOT_RESPONDING,Host not responding…
+NET_HOST_LOST,Host disconnected
+LEAVE_CONFIRM_HOST,Leaving ends the match for everyone.
+LEAVE_CONFIRM_CLIENT,You'll leave the match.
+LEAVE_CONFIRM_YES,Leave
+LEAVE_CONFIRM_NO,Stay
+NET_GAME_OF,%s's game
+MENU_GAMES_SEARCHING,Looking for games on this network and online…
+MENU_GAMES,Games found: %d
+MENU_LAN_UNAVAILABLE,"Can't search this network, enter an address or invite code"
+MENU_LAN_UNAVAILABLE_WEB,"Browsers can't search the network, enter the host's address"
+MENU_LAN_OTHER_VERSION,different version (%s)
+NET_UNREACHABLE,"Couldn't reach the host. Both devices must be on the same network; guest Wi-Fi and access-point isolation block LAN games."
+SCOREBOARD_TITLE,Scoreboard
+COL_PLAYER,Player
+COL_SCORE,Score
+COL_KILLS,K
+COL_DEATHS,D
+COL_ASSISTS,A
+COL_ACCURACY,Acc
+COL_DAMAGE,Damage
+RESULTS_VICTORY,Victory
+RESULTS_DRAW,Draw
+RESULTS_WINNER,%s wins
+RESULTS_NEXT_MATCH,Next match in %d
+PHASE_SUDDEN_DEATH,"Sudden death: next point wins"
+DEATH_KILLED_BY,Killed by %s
+DEATH_KILLER_STATUS,"Their shield %d · health %d"
+DEATH_DAMAGE,"You dealt %d · took %d"
+DEATH_SUICIDE,You died
+RESULTS_XP,"+%d XP · Level %d (%d / %d)"
+MENU_PROFILE,Profile
+PROFILE_LEVEL,Level
+PROFILE_VS_PLAYERS,Vs players K / D / A:
+PROFILE_VS_BOTS,Vs bots K / D / A:
+PROFILE_WINS_MATCHES,Wins / matches:
+PROFILE_INCOMPLETE,incomplete
+PROFILE_ACCURACY,Accuracy
+PROFILE_HEADSHOT_KILLS,Headshot kills
+PROFILE_BEST_STREAK,Best streak
+PROFILE_TIME_PLAYED,Time played
+PROFILE_UNCONFIRMED,%d match(es) unconfirmed (host left before results)
+PROFILE_READ_ONLY,"This profile was saved by a newer version, progress isn't saved"
+SETTINGS_TITLE,Settings
+SETTINGS_DONE,Done
+SETTINGS_TAB_CONTROLS,Controls
+SETTINGS_TAB_VIDEO,Video
+SETTINGS_TAB_AUDIO,Audio
+SETTINGS_TAB_ACCESSIBILITY,Accessibility
+SETTINGS_TAB_KEYS,Keys
+SETTINGS_TAB_ABOUT,About
+ABOUT_VERSION,Version %s
+ABOUT_CREDITS,Credits
+ABOUT_CREDIT_ICONS,"Touch icons: fire, jump, grenade, interact"
+ABOUT_CREDIT_CHARACTERS,Prototype characters
+ABOUT_CREDIT_ENVIRONMENT,"Station environment, astronauts, animations"
+ABOUT_CREDIT_FONTS,Fonts
+ABOUT_CREDIT_ENGINE,Engine
+ABOUT_CREDIT_ONLINE,Online play
+ABOUT_LICENSE,"VOIDSTRIKE is open source under the MIT License. Third-party assets keep their own licenses; the full list and license texts are in the source repository (art/ASSETS.csv, licenses/)."
+ABOUT_SOURCE,Source code and licenses
+SETTINGS_PRESS_KEY,Press a key… (Esc cancels)
+SETTINGS_RESET_KEYS,Reset to defaults
+SETTING_SENS_X,Look sensitivity (horizontal)
+SETTING_SENS_Y,Look sensitivity (vertical)
+SETTING_TOUCH_SENS,Touch look sensitivity
+SETTING_INVERT_Y,Invert vertical look
+SETTING_CROUCH_TOGGLE,Crouch: toggle instead of hold
+SETTING_SPRINT_TOGGLE,Sprint: toggle instead of hold
+SETTING_AIM_TOGGLE,Aim: toggle instead of hold
+SETTING_FOV,Field of view (vertical)
+SETTING_RENDER_SCALE,Render scale
+SETTING_FPS_CAP,Frame rate cap
+SETTING_SHADOWS,Sun shadows
+SETTING_ANTI_ALIASING,Anti-aliasing
+SETTING_GLOW,Glow
+SETTING_EFFECTS,Effects density
+SETTING_ADAPTIVE_QUALITY,Adaptive quality (lowers settings when slow or hot)
+SETTING_VOL_MASTER,Master volume
+SETTING_VOL_MUSIC,Music volume
+SETTING_VOL_SFX,Effects volume
+SETTING_HUD_SCALE,HUD and text scale
+SETTING_VIGNETTE,Low-health vignette
+SETTING_REDUCE_SHAKE,Reduce screen shake
+SETTING_CAPTIONS,Captions for important sounds
+SETTING_SHOW_STATS,Show FPS and latency
+HUD_STATS_FPS,%d FPS
+HUD_STATS_PING,%d ms
+ACTION_MOVE_FORWARD,Move forward
+ACTION_MOVE_BACK,Move back
+ACTION_MOVE_LEFT,Move left
+ACTION_MOVE_RIGHT,Move right
+ACTION_JUMP,Jump / mantle
+ACTION_SPRINT,Sprint
+ACTION_CROUCH,Crouch / slide
+ACTION_RELOAD,Reload
+ACTION_SWITCH_WEAPON,Next weapon
+ACTION_WEAPON_1,Weapon 1
+ACTION_WEAPON_2,Weapon 2
+ACTION_GRENADE,Throw grenade
+ACTION_MELEE,Melee
+ACTION_INTERACT,Pick up / swap
+ACTION_SCOREBOARD,Scoreboard
+SETTING_NIGHT_MODE,Night mode (compressed dynamic range)
+CAPTION_SHIELD_BROKEN,Shield broken
+CAPTION_SHIELD_RECHARGING,Shield recharging
+NET_MAP_MISMATCH,"The host is on a different map (%s); update both devices to the same build"
+MAP_STATION,Meridian Station
+MAP_SPIRE,Halcyon Spire
+MAP_FOUNDRY,Vesper Foundry
+MENU_MAP,"Map: %s  ›"
+MAP_TEST_ARENA,Test Arena
+MENU_TAGLINE,Arena combat · LAN & online · Cross-play
+MENU_TAGLINE_WEB,Arena combat · Practice against bots · Join LAN games · Get the desktop or Android app to host and play online
+MENU_XP_PROGRESS,Level %d · %d / %d XP
+HUD_RESPAWN_LABEL,Respawning in
+PROFILE_TILE_VS_PLAYERS,Vs players K / D / A
+PROFILE_TILE_VS_BOTS,Vs bots K / D / A
+PROFILE_TILE_WINS,Wins / matches
+PHASE_GO,Fight!
+SETTING_DISPLAY_MODE,Display mode
+SETTING_RESOLUTION,Resolution
+SETTING_VALUE_WINDOWED,Windowed
+SETTING_VALUE_FULLSCREEN,Fullscreen
+SETTING_VALUE_EXCLUSIVE,Exclusive fullscreen
+SETTING_VALUE_NATIVE,Native
+SETTING_QUALITY,Graphics quality
+SETTING_VALUE_LOW,Low
+SETTING_VALUE_MEDIUM,Medium
+SETTING_VALUE_HIGH,High
+SETTING_VALUE_ULTRA,Ultra
+SETTING_VALUE_CUSTOM,Custom
+SETTING_VALUE_AUTO,Auto (quality preset)
+SETTING_VALUE_OFF,Off
+SETTING_VALUE_FXAA,FXAA
+SETTING_VALUE_MSAA_2X,MSAA 2×
+SETTING_VALUE_MSAA_4X,MSAA 4×
+PROFILE_TAB_CUSTOMIZE,Customise
+PROFILE_TAB_STATS,Stats
+CUSTOMIZE_CALLSIGN,Callsign
+CUSTOMIZE_COLOR,Colour
+CUSTOMIZE_AUTO,Auto
+CUSTOMIZE_CHARACTER,Character
+CHAR_SENTINEL,Sentinel
+CHAR_SENTINEL_DESC,"Cybernetic combat frame. Light-strip armour glows in your colour."
+CHAR_VANGUARD,Vanguard
+CHAR_VANGUARD_DESC,"Heavy plated trooper with a gold visor, armour in your colour."
+CHAR_OPERATIVE,Operative
+CHAR_OPERATIVE_DESC,"Light flight-suit pilot, quick and low-profile."
+CHAR_SPACER,Spacer
+CHAR_SPACER_DESC,"A cheerful crew of station astronauts: frog, red panda, bee or flamingo."
+HUD_GRENADES,Frag ×%d
+TOUCH_GRENADE,Grenade
+TOUCH_MELEE,Melee
+TOUCH_INTERACT,Pick up
+HUD_PICKUP_SWAP,[%s] Swap for %s
+LOADOUT_PRIMARY,Next spawn:
+CUSTOMIZE_PRIMARY,Primary weapon
+MODE_FFA,Free-for-all
+MODE_TDM,Team Deathmatch
+MODE_CTF,Capture the Flag
+MODE_WAVES,Co-op Waves
+MODE_TDM_SHORT,Team DM
+MODE_CTF_SHORT,CTF
+CTF_GOAL,Take the enemy flag to your base
+CTF_CARRYING,You have the flag! Bring it to your base
+CTF_OUR_FLAG_TAKEN,%s has our flag
+CTF_OUR_FLAG_DROPPED,Our flag is down: returns in %d s
+CTF_WE_HAVE_FLAG,%s has their flag: escort them home
+CTF_NOBODY,The flag
+CTF_FEED_TAKE,took the %s flag
+CTF_FEED_DROP,dropped the %s flag
+CTF_FEED_RETURN,returned the %s flag
+CTF_FEED_CAPTURE,captured the %s flag
+CAPTION_FLAG_TAKEN,Enemy flag taken
+CAPTION_OUR_FLAG_TAKEN,Our flag was taken
+CAPTION_FLAG_CAPTURED,Flag captured
+CAPTION_FLAG_LOST,They captured our flag
+CAPTION_FLAG_RETURNED,Flag returned
+WAVES_WAVE,Wave %d
+WAVES_INCOMING,%d enemies incoming
+WAVES_CLEARED,cleared
+WAVES_FIGHTING,Wave %d of %d · %d enemies left
+WAVES_NEXT,Wave %d in %d s
+CAPTION_WAVE_START,Wave %d
+CAPTION_WAVE_CLEARED,Wave cleared
+HUD_WAVE_WAIT,Back when the wave is cleared
+WAVES_VICTORY,All %d waves cleared
+WAVES_DEFEAT,Overrun on wave %d
+TEAM_CYAN,Cyan
+TEAM_ORANGE,Orange
+RESULTS_TEAM_WINS,%s team wins
+MENU_MODE,Mode: %s  ›
+SETTINGS_FRIENDLY_FIRE,Friendly fire when hosting Team Deathmatch
+SETTING_BROWSER_PLAYERS,"Allow browser players when hosting on LAN (WebSocket, port 47711)"
+LOBBY_BROWSER_HINT,"Browsers on this network can join too (web build served over http, port %d)."
+SETTINGS_TAB_GAME,Game
+SETTING_BOT_DIFFICULTY,Bot difficulty
+SETTING_VALUE_EASY,Easy
+SETTING_VALUE_NORMAL,Normal
+SETTING_VALUE_HARD,Hard
+SETTING_VALUE_INSANE,Insane
+RESULTS_UNLOCKED,Unlocked: %s
+CUSTOMIZE_LOCKED,Level %d
+UNLOCK_COLOR_5,Crimson
+UNLOCK_COLOR_6,Gold
+UNLOCK_COLOR_7,Magenta
+UNLOCK_COLOR_8,Frost
+UNLOCK_COLOR_9,Ion teal
+UNLOCK_COLOR_10,Gunmetal
+UNLOCK_COLOR_11,Ember
+SETTING_AIM_ASSIST,Aim assist (touch)
+SETTING_AUTO_FIRE,Auto-fire (touch)
+SETTING_TOUCH_OPACITY,Touch button opacity
+SETTING_TOUCH_LAYOUT,Touch button layout
+SETTINGS_EDIT,Edit
+TOUCH_EDIT_HINT,Drag a button to move it. Select one to resize it.
+TOUCH_EDIT_SIZE,Button size
+TOUCH_EDIT_RESET,Reset
+MENU_REJOIN,Rejoin match
+PAUSE_SCAN_TO_JOIN,Scan to join
+LOADING,Loading
+MENU_HOST_ONLINE,Internet
+NET_ONLINE_SIGNING_IN,Connecting to online services…
+NET_ONLINE_HOSTING,"Online game · invite code %s"
+NET_ONLINE_ERROR,Online play failed (%s)
+NET_ONLINE_NOT_FOUND,No online game with code %s
+NET_ONLINE_JOINING,Joining online game %s…
+PAUSE_INVITE_CODE,Invite code
+NET_ONLINE_VERSION,That game runs a different version of VOIDSTRIKE
+MENU_SINGLE_PLAYER,Single Player
+MENU_START,Start
+MENU_WATCH,Watch
+SPECTATE_WATCHING,Watching %s
+SPECTATE_HINT,"Click or Space: next player · Right click: previous · Esc: menu"
+SPECTATE_HINT_TOUCH,Tap to watch the next player
+MENU_JOIN_WATCH,Watch games already playing (spectate)
+MENU_HOST_LAN,Local network
+MENU_TAG_LAN,LAN
+MENU_TAG_ONLINE,Online
+MENU_IN_LOBBY,In lobby
+MENU_IN_MATCH,Playing
+LOBBY_TITLE,Lobby
+LOBBY_CONNECTING,Connecting…
+LOBBY_JOINED,%s's lobby
+LOBBY_HOST_CHOOSES,Map (the host chooses)
+LOBBY_PLAYERS_TITLE,Players
+LOBBY_PLAYERS,%d / %d
+LOBBY_HOST_TAG,Host
+LOBBY_YOU_TAG,You
+LOBBY_TEAM,%s · %d / %d
+LOBBY_KICK,Remove
+LOBBY_PING,%d ms
+LOBBY_KICK_CONFIRM,Confirm?
+LOBBY_KICKED,The host removed you from the lobby
+LOBBY_JOIN_TEAM,Join
+LOBBY_EDIT_TEAM,Edit
+LOBBY_EDIT_TEAM_TITLE,Team name and colour
+LOBBY_TEAM_NAME,Name
+LOBBY_TEAM_COLOUR,Colour
+LOBBY_TEAM_SAVE,Save
+LOBBY_TEAM_CANCEL,Cancel
+LOBBY_LEAVE,Leave
+LOBBY_START,Start match
+LOBBY_WAITING_FOR_HOST,Waiting for the host to start…
+LOBBY_HOST_LEFT,The host closed the lobby
+MAP_STATION_BLURB,Compact station deck · close quarters
+MAP_SPIRE_BLURB,Open moon platform · long sightlines
+MAP_FOUNDRY_BLURB,Refinery yard · catwalks and close quarters
+MENU_SINGLE_PLAYER_SUB,Practice against bots on any map
+MENU_HOST_SUB,Open a LAN or online lobby
+MENU_HOST_LAN_SUB,Players on the same Wi-Fi join you
+MENU_HOST_ONLINE_SUB,Friends anywhere join with an invite code
+MENU_JOIN_SUB,Find games nearby and online
+MENU_JOIN_SUB_WEB,Join a game hosted on your network
+MENU_HOST_HINT,You pick the map and mode in the lobby once players have joined.
+MENU_SECTION_MAP,Map
+MENU_SECTION_MODE,Mode
+MENU_SECTION_DURATION,Match length
+MENU_SECTION_BOTS,Bots
+MENU_SECTION_BOT_DIFFICULTY,Bot difficulty
+MENU_SECTION_FRIENDLY_FIRE,Friendly fire
+MENU_BOTS_NONE,None
+MENU_OFF,Off
+MENU_ON,On
+MENU_SOLO_HINT_ONE,You against 1 bot
+MENU_MINUTES,%d min
+MENU_SOLO_HINT,You against %d bots
+MENU_SOLO_HINT_WAVES,"You against 10 waves of bots, each bigger and tougher"
+MENU_JOIN_DIRECT,Join directly
+MENU_JOIN_DIRECT_HINT,"Enter the host's IP address (192.168.0.10) or a 6-letter invite code."
+MENU_JOIN_DIRECT_HINT_LAN,"Enter the host's IP address, e.g. 192.168.0.10."
+MENU_JOIN_DIRECT_HINT_WEB,"Enter the host's IP address, e.g. 192.168.0.10. The host must allow browser players."
+LOBBY_SHARE_CODE,Share the invite code with friends. They find the game under Join Game or type the code.
+LOBBY_LAN_HINT,Players on this network see the game under Join Game.
+LOBBY_LAN_CAPTION,Local network
+LOBBY_HOST_BOTS_HINT,Bots make room as players join. Start when everyone is in.
+MENU_GAMES_EMPTY,"No games yet. Ask a friend to host, or enter their address or invite code."
+NET_SERVER_SHUTDOWN,The server was shut down
+SETTING_REDUCE_FLASHES,Reduce flashes
+HUD_SHIELD,SHIELD
+HUD_HEALTH,HEALTH
+TAG_PULSE,PULSE
+TAG_PISTOL,PISTOL
+TAG_ARC,ARC
+TAG_BURST,BURST
+TAG_RAIL,RAIL
+TAG_SCATTER,SCATTER
+TAG_SMG,SMG
+TAG_FRAG,FRAG
+TAG_MELEE,MELEE
+TAG_FALL,FALL
+NET_ONLINE_UNREACHABLE,"Couldn't connect to the host over the internet. Check your connection and try again."
+LOADING_MAP,Loading the map
+LOADING_FIRST_RUN,"Preparing graphics for this device. The first match after an install or a driver update takes longer."
+LOADING_TIP,Tip
+TIP_SLIDE,"Sprint, then crouch to slide under fire."
+TIP_DOUBLE_JUMP,Jump again in mid-air for a double jump.
+TIP_MANTLE,Jump at a ledge to mantle up onto it.
+TIP_PADS,Jump pads in the side lanes throw you up to the high ground.
+TIP_SCOPE,Scoping in tightens the spread of every gun.
+TIP_POWER,The Rail Sniper and Arc Launcher are power weapons: find them on the map.
+TIP_GRENADE,A frag grenade flushes enemies out of cover.
+TIP_CTF,"In Capture the Flag, three captures win."
+TIP_BOTS,Bots fill empty places. Pick their number and difficulty next to the map.
