@@ -19,6 +19,10 @@ permissions:
 
 env:
   GAME_NAME: VOIDSTRIKE
+  # Renderer: "gl_compatibility" works on emulators (BlueStacks), older phones
+  # and anything without solid Vulkan. Switch to "mobile" for modern phones -
+  # better lighting, but it will not render in BlueStacks.
+  RENDERER: gl_compatibility
   PACKAGE_ID: com.jagdev.voidstrike
   UPSTREAM: https://github.com/aswinkumarks/IONFALL.git
   UPSTREAM_SHA: f364848aa3c18ec321d59789503b596135d60adf
@@ -69,6 +73,29 @@ jobs:
           set -euo pipefail
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
             "platform-tools" "platforms;$ANDROID_PLATFORM" "build-tools;$ANDROID_BUILD_TOOLS" >/dev/null
+
+      # Godot's Android exporter reads the SDK, JDK and signing key from its
+      # editor settings. A fresh runner has none, so write them explicitly.
+      - name: Configure Godot Android settings
+        run: |
+          set -euo pipefail
+          KS="$RUNNER_TEMP/debug.keystore"
+          keytool -genkeypair -keystore "$KS" -alias androiddebugkey \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+          D="$HOME/.config/godot"; mkdir -p "$D"
+          cat > "$D/editor_settings-4.7.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$KS"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+          cat "$D/editor_settings-4.7.tres"
 
       - name: Fetch the game and rebrand it
         run: |
@@ -165,11 +192,38 @@ jobs:
       # branch, so you own a browsable, downloadable copy without uploading
       # anything yourself. LFS filters are stripped so the binaries are stored
       # as ordinary files and never touch your LFS quota.
+      # Force the chosen renderer in project.godot.
+      - name: Set renderer
+        working-directory: game
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, pathlib
+          r = os.environ["RENDERER"].strip()
+          p = pathlib.Path("project.godot")
+          s = p.read_text()
+          s = s.replace('renderer/rendering_method="mobile"',
+                        'renderer/rendering_method="%s"' % r)
+          s = s.replace('renderer/rendering_method="forward_plus"',
+                        'renderer/rendering_method="%s"' % r)
+          if "rendering_method.mobile" not in s:
+              s = s.replace('renderer/rendering_method="%s"' % r,
+                            'renderer/rendering_method="%s"\n'
+                            'renderer/rendering_method.mobile="%s"' % (r, r), 1)
+          p.write_text(s)
+          PY
+          grep -n "rendering_method" project.godot
+
       - name: Publish source code into this repository
+        # Never let this block the build: the APK and AAB matter more than the mirror.
+        continue-on-error: true
         run: |
           set -euo pipefail
           cd game
           rm -rf .git
+          # GitHub refuses to let a bot push workflow files without extra
+          # permission, and upstream's CI is useless in a mirror anyway.
+          rm -rf .github
           sed -i '/filter=lfs/d' .gitattributes || true
           git init -q -b source
           git add -A
@@ -180,31 +234,98 @@ jobs:
             source:source
           echo "Source published to the 'source' branch"
 
+      # The official `--install-android-build-template` command hung for its full
+      # timeout on CI, so unpack the template directly. It is a plain zip whose
+      # root belongs in android/build (Godot's default gradle_build_directory).
+      # Godot can produce an APK without Gradle: it injects the game's .pck into
+      # the prebuilt android_debug.apk template and signs it with apksigner.
+      # That skips the whole Gradle build template, which is what kept failing.
+      - name: Make the APK preset Gradle-free
+        working-directory: game
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, pathlib
+          p = pathlib.Path("export_presets.cfg")
+          s = p.read_text()
+          out = []
+          for block in re.split(r"(?=\[preset\.\d+\])", s):
+              if 'name="Android Test"' in block:
+                  block = block.replace("gradle_build/use_gradle_build=true",
+                                        "gradle_build/use_gradle_build=false")
+              out.append(block)
+          p.write_text("".join(out))
+          PY
+          grep -c "use_gradle_build=false" export_presets.cfg
+
+      - name: Install Android build template
+        working-directory: game
+        run: |
+          set -euo pipefail
+          TPL=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          test -f "$TPL/android_source.zip"
+          mkdir -p android/build
+          unzip -q "$TPL/android_source.zip" -d android/build
+          test -f android/build/build.gradle
+          test -f android/build/settings.gradle
+          echo "build template installed:"
+          touch android/.gdignore
+          # Gradle cannot guess where the Android SDK is. Godot's own installer
+          # used to handle this; unpacking the template by hand skips it.
+          echo "sdk.dir=$ANDROID_HOME" > android/build/local.properties
+          cat android/build/local.properties
+          ls android/build | head
+
       - name: Import project
         working-directory: game
         run: timeout 1800 godot --headless --import
 
-      - name: Install Android build template
-        working-directory: game
-        run: timeout 900 godot --headless --install-android-build-template
-
       - name: Export APK
         working-directory: game
+        env:
+          # Belt and braces: Godot honours these even if the editor-settings
+          # file is ignored for any reason.
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           set -euo pipefail
           python3 tools/write_build_info.py --platform android --arch arm64 --config debug
           mkdir -p build/android-test
+          set +e
           timeout 1800 godot --headless --export-debug "Android Test" \
             build/android-test/voidstrike-test.apk 2>&1 | tee apk.log
-          if grep -q "ERROR" apk.log; then echo "::error::APK export failed"; exit 1; fi
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ] || grep -q "ERROR" apk.log; then
+            echo "--- last 80 lines of the export log ---"
+            tail -80 apk.log
+            echo "::error::APK export failed (exit $CODE)"
+            exit 1
+          fi
           test -f build/android-test/voidstrike-test.apk
 
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidstrike-apk
+          path: game/build/android-test/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Export AAB
+        # The AAB needs Gradle. If it fails, the APK above is still yours.
+        continue-on-error: true
         working-directory: game
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2048m"
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           set -euo pipefail
           CONFIG=debug
@@ -217,24 +338,25 @@ jobs:
           fi
           python3 tools/write_build_info.py --platform android --arch arm64 --config $CONFIG
           mkdir -p build/android
-          timeout 1800 godot --headless --export-$CONFIG "Android" \
+          set +e
+          timeout 2400 godot --headless --export-$CONFIG "Android" \
             build/android/voidstrike.aab 2>&1 | tee aab.log
-          if grep -q "ERROR" aab.log; then echo "::error::AAB export failed"; exit 1; fi
-          test -f build/android/voidstrike.aab
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ] || [ ! -f build/android/voidstrike.aab ]; then
+            echo "===== AAB EXPORT LOG (last 120 lines) ====="
+            tail -120 aab.log
+            echo "=========================================="
+            echo "::error::AAB export failed (exit $CODE)"
+            exit 1
+          fi
           echo "AAB_SIGNED_AS=$CONFIG" >> "$GITHUB_ENV"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: voidstrike-apk
-          path: game/build/android-test/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Upload AAB
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: voidstrike-aab-${{ env.AAB_SIGNED_AS }}
           path: game/build/android/*.aab
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
