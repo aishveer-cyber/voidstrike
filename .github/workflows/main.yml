@@ -1,0 +1,240 @@
+name: Build APK and AAB
+
+# ONE file. Nothing to install, no Godot, no Android Studio, no Git.
+#
+# It fetches the open-source game, rebrands it to your name, and exports:
+#   voidstrike-test.apk  - installs on a phone
+#   voidstrike.aab       - Play Store bundle
+#
+# Edit GAME_NAME and PACKAGE_ID below to change the branding.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Needed so the job can publish the source into this repository.
+permissions:
+  contents: write
+
+env:
+  GAME_NAME: VOIDSTRIKE
+  PACKAGE_ID: com.jagdev.voidstrike
+  UPSTREAM: https://github.com/aswinkumarks/IONFALL.git
+  UPSTREAM_SHA: f364848aa3c18ec321d59789503b596135d60adf
+  GODOT_VERSION: "4.7.2"
+  GODOT_RELEASE: "4.7.2-stable"
+  ANDROID_PLATFORM: "android-36"
+  ANDROID_BUILD_TOOLS: "36.1.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-${{ env.GODOT_RELEASE }}-v1
+
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          B=https://github.com/godotengine/godot/releases/download/$GODOT_RELEASE
+          mkdir -p ~/godot/dl && cd ~/godot/dl
+          curl -fsSL -o editor.zip $B/Godot_v${GODOT_RELEASE}_linux.x86_64.zip
+          curl -fsSL -o templates.tpz $B/Godot_v${GODOT_RELEASE}_export_templates.tpz
+          unzip -q editor.zip -d ~/godot
+          TPL=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$TPL" && unzip -q templates.tpz -d tpl && mv tpl/templates/* "$TPL"/
+          rm -rf ~/godot/dl
+
+      - name: Put Godot on PATH
+        run: |
+          sudo ln -sf ~/godot/Godot_v${GODOT_RELEASE}_linux.x86_64 /usr/local/bin/godot
+          godot --version
+
+      - name: Install Android SDK packages
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platform-tools" "platforms;$ANDROID_PLATFORM" "build-tools;$ANDROID_BUILD_TOOLS" >/dev/null
+
+      - name: Fetch the game and rebrand it
+        run: |
+          set -euo pipefail
+          git lfs install
+          git clone --depth 1 "$UPSTREAM" game
+          cd game
+          git fetch --depth 1 origin "$UPSTREAM_SHA"
+          git checkout -q "$UPSTREAM_SHA"
+          git lfs pull
+          cd ..
+          python3 - <<'PY'
+          import os, pathlib, sys
+
+          NAME = os.environ["GAME_NAME"].strip()
+          PKG = os.environ["PACKAGE_ID"].strip()
+          SLUG = "".join(c for c in NAME.lower() if c.isalnum())
+          ORIG, OSLUG = "IONFALL", "ionfall"
+
+          root = pathlib.Path("game")
+          if not (root / "project.godot").is_file():
+              sys.exit("game/project.godot missing")
+
+          files = [
+              "project.godot", "export_presets.cfg", "locale/strings.csv",
+              "core/platform.gd", "server/server_main.gd", "icon.svg", "README.md",
+              "addons/ionfall_android/plugin.gd", "addons/ionfall_android/plugin.cfg",
+              "tests/unit/test_discovery.gd", "tests/unit/test_qr_code.gd",
+              "game/match.gd", "game/test_clients.gd",
+              "net/lobby_session.gd", "net/server_session.gd",
+              "net/online/eos_backend.gd", "tools/store_art.gd",
+              "tools/gen_sounds.gd", "tools/gen_textures.gd",
+              "ui/theme/ui_style.gd", "ui/main_menu/main_menu.gd",
+          ]
+
+          # Paths and ids that must not be rewritten: real folders on disk.
+          KEEP = ["addons/ionfall_android", "addons/ionfall_tools",
+                  "io.github.aswinkumarks.ionfall", "art/weapons/ionfall"]
+
+          def swap(s):
+              for i, k in enumerate(KEEP):
+                  s = s.replace(k, "@@K%d@@" % i)
+              s = s.replace(ORIG, NAME).replace(ORIG.capitalize(), NAME.capitalize())
+              s = s.replace(OSLUG, SLUG)
+              for i, k in enumerate(KEEP):
+                  s = s.replace("@@K%d@@" % i, k)
+              return s
+
+          total = 0
+          for rel in files:
+              f = root / rel
+              if not f.is_file():
+                  continue
+              before = f.read_text(encoding="utf-8")
+              after = swap(before)
+              if after != before:
+                  f.write_text(after, encoding="utf-8")
+                  total += 1
+          print("rebranded %d files" % total)
+
+          presets = root / "export_presets.cfg"
+          p = presets.read_text(encoding="utf-8")
+          p = p.replace('package/unique_name="io.github.aswinkumarks.ionfall"',
+                        'package/unique_name="%s"' % PKG)
+          p = p.replace('package/name="IONFALL"', 'package/name="%s"' % NAME)
+          presets.write_text(p, encoding="utf-8")
+
+          # The deep-link scheme must agree in three places or LAN joining breaks.
+          hits = 0
+          for rel in ["core/platform.gd", "game/match.gd",
+                      "addons/ionfall_android/plugin.gd"]:
+              t = (root / rel).read_text(encoding="utf-8")
+              if ("%s://" % SLUG) in t or ('scheme="%s"' % SLUG) in t:
+                  hits += 1
+          print("scheme consistent in %d/3 files" % hits)
+          if hits != 3:
+              sys.exit("scheme mismatch")
+
+          (root / "ATTRIBUTION.md").write_text(
+              "# Attribution\n\n**%s** is a rebranded derivative of **%s** "
+              "(MIT, Copyright (c) 2026 aswinkumarks), "
+              "https://github.com/aswinkumarks/%s\n\n"
+              "The original MIT copyright notice is kept in LICENSE, as the "
+              "licence requires. Changes: game name, Android application id "
+              "(%s), player-visible UI strings, deep-link scheme (%s://), "
+              "EOS socket names.\n" % (NAME, ORIG, ORIG, PKG, SLUG),
+              encoding="utf-8")
+          print("ATTRIBUTION.md written")
+          PY
+          grep '^config/name' game/project.godot
+          grep 'package/unique_name' game/export_presets.cfg | sort -u
+
+      # Publishes the rebranded game into this repository as the 'source'
+      # branch, so you own a browsable, downloadable copy without uploading
+      # anything yourself. LFS filters are stripped so the binaries are stored
+      # as ordinary files and never touch your LFS quota.
+      - name: Publish source code into this repository
+        run: |
+          set -euo pipefail
+          cd game
+          rm -rf .git
+          sed -i '/filter=lfs/d' .gitattributes || true
+          git init -q -b source
+          git add -A
+          git -c user.email="ci@users.noreply.github.com" -c user.name="build" \
+              commit -qm "VOIDSTRIKE source ($UPSTREAM_SHA)"
+          git push -f \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            source:source
+          echo "Source published to the 'source' branch"
+
+      - name: Import project
+        working-directory: game
+        run: timeout 1800 godot --headless --import
+
+      - name: Install Android build template
+        working-directory: game
+        run: timeout 900 godot --headless --install-android-build-template
+
+      - name: Export APK
+        working-directory: game
+        run: |
+          set -euo pipefail
+          python3 tools/write_build_info.py --platform android --arch arm64 --config debug
+          mkdir -p build/android-test
+          timeout 1800 godot --headless --export-debug "Android Test" \
+            build/android-test/voidstrike-test.apk 2>&1 | tee apk.log
+          if grep -q "ERROR" apk.log; then echo "::error::APK export failed"; exit 1; fi
+          test -f build/android-test/voidstrike-test.apk
+
+      - name: Export AAB
+        working-directory: game
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CONFIG=debug
+          if [[ "$GITHUB_REF" == refs/tags/v* && -n "$KEYSTORE_BASE64" ]]; then
+            CONFIG=release
+            (umask 077; echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks")
+            export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$RUNNER_TEMP/upload.jks"
+            export GODOT_ANDROID_KEYSTORE_RELEASE_USER="$KEY_ALIAS"
+            export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD="$KEY_PASSWORD"
+          fi
+          python3 tools/write_build_info.py --platform android --arch arm64 --config $CONFIG
+          mkdir -p build/android
+          timeout 1800 godot --headless --export-$CONFIG "Android" \
+            build/android/voidstrike.aab 2>&1 | tee aab.log
+          if grep -q "ERROR" aab.log; then echo "::error::AAB export failed"; exit 1; fi
+          test -f build/android/voidstrike.aab
+          echo "AAB_SIGNED_AS=$CONFIG" >> "$GITHUB_ENV"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidstrike-apk
+          path: game/build/android-test/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidstrike-aab-${{ env.AAB_SIGNED_AS }}
+          path: game/build/android/*.aab
+          if-no-files-found: error
+          retention-days: 14
