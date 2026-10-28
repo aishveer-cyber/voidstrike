@@ -19,6 +19,10 @@ permissions:
 
 env:
   GAME_NAME: VOIDSTRIKE
+  # Renderer: "gl_compatibility" works on emulators (BlueStacks), older phones
+  # and anything without solid Vulkan. Switch to "mobile" for modern phones -
+  # better lighting, but it will not render in BlueStacks.
+  RENDERER: gl_compatibility
   PACKAGE_ID: com.jagdev.voidstrike
   UPSTREAM: https://github.com/aswinkumarks/IONFALL.git
   UPSTREAM_SHA: f364848aa3c18ec321d59789503b596135d60adf
@@ -188,6 +192,28 @@ jobs:
       # branch, so you own a browsable, downloadable copy without uploading
       # anything yourself. LFS filters are stripped so the binaries are stored
       # as ordinary files and never touch your LFS quota.
+      # Force the chosen renderer in project.godot.
+      - name: Set renderer
+        working-directory: game
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, pathlib
+          r = os.environ["RENDERER"].strip()
+          p = pathlib.Path("project.godot")
+          s = p.read_text()
+          s = s.replace('renderer/rendering_method="mobile"',
+                        'renderer/rendering_method="%s"' % r)
+          s = s.replace('renderer/rendering_method="forward_plus"',
+                        'renderer/rendering_method="%s"' % r)
+          if "rendering_method.mobile" not in s:
+              s = s.replace('renderer/rendering_method="%s"' % r,
+                            'renderer/rendering_method="%s"\n'
+                            'renderer/rendering_method.mobile="%s"' % (r, r), 1)
+          p.write_text(s)
+          PY
+          grep -n "rendering_method" project.godot
+
       - name: Publish source code into this repository
         # Never let this block the build: the APK and AAB matter more than the mirror.
         continue-on-error: true
@@ -244,6 +270,13 @@ jobs:
           test -f android/build/settings.gradle
           echo "build template installed:"
           touch android/.gdignore
+          # Gradle cannot guess where the Android SDK is. Godot's own installer
+          # used to handle this; unpacking the template by hand skips it.
+          echo "sdk.dir=$ANDROID_HOME" > android/build/local.properties
+          # A zip round-trip can drop the exec bit; Godot runs ./gradlew directly.
+          chmod +x android/build/gradlew
+          test -x android/build/gradlew
+          cat android/build/local.properties
           ls android/build | head
 
       - name: Import project
@@ -291,6 +324,11 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2048m"
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           set -euo pipefail
           CONFIG=debug
@@ -312,6 +350,12 @@ jobs:
             echo "===== AAB EXPORT LOG (last 120 lines) ====="
             tail -120 aab.log
             echo "=========================================="
+            {
+              echo "## AAB export failed (exit $CODE)"
+              echo '```'
+              tail -120 aab.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
             echo "::error::AAB export failed (exit $CODE)"
             exit 1
           fi
