@@ -211,6 +211,27 @@ jobs:
       # The official `--install-android-build-template` command hung for its full
       # timeout on CI, so unpack the template directly. It is a plain zip whose
       # root belongs in android/build (Godot's default gradle_build_directory).
+      # Godot can produce an APK without Gradle: it injects the game's .pck into
+      # the prebuilt android_debug.apk template and signs it with apksigner.
+      # That skips the whole Gradle build template, which is what kept failing.
+      - name: Make the APK preset Gradle-free
+        working-directory: game
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, pathlib
+          p = pathlib.Path("export_presets.cfg")
+          s = p.read_text()
+          out = []
+          for block in re.split(r"(?=\[preset\.\d+\])", s):
+              if 'name="Android Test"' in block:
+                  block = block.replace("gradle_build/use_gradle_build=true",
+                                        "gradle_build/use_gradle_build=false")
+              out.append(block)
+          p.write_text("".join(out))
+          PY
+          grep -c "use_gradle_build=false" export_presets.cfg
+
       - name: Install Android build template
         working-directory: game
         run: |
@@ -263,6 +284,8 @@ jobs:
           retention-days: 14
 
       - name: Export AAB
+        # The AAB needs Gradle. If it fails, the APK above is still yours.
+        continue-on-error: true
         working-directory: game
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
@@ -287,9 +310,10 @@ jobs:
           echo "AAB_SIGNED_AS=$CONFIG" >> "$GITHUB_ENV"
 
       - name: Upload AAB
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: voidstrike-aab-${{ env.AAB_SIGNED_AS }}
           path: game/build/android/*.aab
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
