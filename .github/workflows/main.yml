@@ -166,10 +166,15 @@ jobs:
       # anything yourself. LFS filters are stripped so the binaries are stored
       # as ordinary files and never touch your LFS quota.
       - name: Publish source code into this repository
+        # Never let this block the build: the APK and AAB matter more than the mirror.
+        continue-on-error: true
         run: |
           set -euo pipefail
           cd game
           rm -rf .git
+          # GitHub refuses to let a bot push workflow files without extra
+          # permission, and upstream's CI is useless in a mirror anyway.
+          rm -rf .github
           sed -i '/filter=lfs/d' .gitattributes || true
           git init -q -b source
           git add -A
