@@ -189,9 +189,21 @@ jobs:
         working-directory: game
         run: timeout 1800 godot --headless --import
 
+      # The official `--install-android-build-template` command hung for its full
+      # timeout on CI, so unpack the template directly. It is a plain zip whose
+      # root belongs in android/build (Godot's default gradle_build_directory).
       - name: Install Android build template
         working-directory: game
-        run: timeout 900 godot --headless --install-android-build-template
+        run: |
+          set -euo pipefail
+          TPL=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          test -f "$TPL/android_source.zip"
+          mkdir -p android/build
+          unzip -q "$TPL/android_source.zip" -d android/build
+          test -f android/build/build.gradle
+          test -f android/build/settings.gradle
+          echo "build template installed:"
+          ls android/build | head
 
       - name: Export APK
         working-directory: game
@@ -203,6 +215,14 @@ jobs:
             build/android-test/voidstrike-test.apk 2>&1 | tee apk.log
           if grep -q "ERROR" apk.log; then echo "::error::APK export failed"; exit 1; fi
           test -f build/android-test/voidstrike-test.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidstrike-apk
+          path: game/build/android-test/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Export AAB
         working-directory: game
@@ -227,14 +247,6 @@ jobs:
           if grep -q "ERROR" aab.log; then echo "::error::AAB export failed"; exit 1; fi
           test -f build/android/voidstrike.aab
           echo "AAB_SIGNED_AS=$CONFIG" >> "$GITHUB_ENV"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: voidstrike-apk
-          path: game/build/android-test/*.apk
-          if-no-files-found: error
-          retention-days: 14
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
