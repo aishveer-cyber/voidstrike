@@ -70,6 +70,29 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
             "platform-tools" "platforms;$ANDROID_PLATFORM" "build-tools;$ANDROID_BUILD_TOOLS" >/dev/null
 
+      # Godot's Android exporter reads the SDK, JDK and signing key from its
+      # editor settings. A fresh runner has none, so write them explicitly.
+      - name: Configure Godot Android settings
+        run: |
+          set -euo pipefail
+          KS="$RUNNER_TEMP/debug.keystore"
+          keytool -genkeypair -keystore "$KS" -alias androiddebugkey \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+          D="$HOME/.config/godot"; mkdir -p "$D"
+          cat > "$D/editor_settings-4.7.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$KS"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+          cat "$D/editor_settings-4.7.tres"
+
       - name: Fetch the game and rebrand it
         run: |
           set -euo pipefail
@@ -185,10 +208,6 @@ jobs:
             source:source
           echo "Source published to the 'source' branch"
 
-      - name: Import project
-        working-directory: game
-        run: timeout 1800 godot --headless --import
-
       # The official `--install-android-build-template` command hung for its full
       # timeout on CI, so unpack the template directly. It is a plain zip whose
       # root belongs in android/build (Godot's default gradle_build_directory).
@@ -203,17 +222,36 @@ jobs:
           test -f android/build/build.gradle
           test -f android/build/settings.gradle
           echo "build template installed:"
+          touch android/.gdignore
           ls android/build | head
+
+      - name: Import project
+        working-directory: game
+        run: timeout 1800 godot --headless --import
 
       - name: Export APK
         working-directory: game
+        env:
+          # Belt and braces: Godot honours these even if the editor-settings
+          # file is ignored for any reason.
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           set -euo pipefail
           python3 tools/write_build_info.py --platform android --arch arm64 --config debug
           mkdir -p build/android-test
+          set +e
           timeout 1800 godot --headless --export-debug "Android Test" \
             build/android-test/voidstrike-test.apk 2>&1 | tee apk.log
-          if grep -q "ERROR" apk.log; then echo "::error::APK export failed"; exit 1; fi
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ] || grep -q "ERROR" apk.log; then
+            echo "--- last 80 lines of the export log ---"
+            tail -80 apk.log
+            echo "::error::APK export failed (exit $CODE)"
+            exit 1
+          fi
           test -f build/android-test/voidstrike-test.apk
 
       - name: Upload APK
